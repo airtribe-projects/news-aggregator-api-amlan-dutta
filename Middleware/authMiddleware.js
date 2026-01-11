@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../Utils/jwtUtils');
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -8,13 +8,13 @@ const authenticateToken = (req, res, next) => {
         return res.status(401).json({ error: 'Access token required' });
     }
 
-    jwt.verify(token, 'secretkey', (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid or expired token' });
-        }
+    try {
+        const user = await verifyToken(token);
         req.user = user;
         next();
-    });
+    } catch (err) {
+        return res.status(403).json({ error: 'Invalid or expired token' });
+    }
 };
 
 module.exports = {
